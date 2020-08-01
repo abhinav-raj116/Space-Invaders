@@ -1,5 +1,6 @@
 import pygame
 import random
+from math import sqrt
 
 # Intialize the pygame
 pygame.init()
@@ -17,7 +18,7 @@ pygame.display.set_caption('Space Invaders')
 icon = pygame.image.load('icon.png')
 pygame.display.set_icon(icon)
 
-# PLayer (SpaceShip)
+# Player (SpaceShip)
 playerImg = pygame.image.load('player.png')
 playerX = 368
 playerY = 400
@@ -25,14 +26,14 @@ player_width = 64
 player_height = 64
 playerX_change = 0
 playerY_change = 0
-player_rate = 3
+player_rate = 2
 
 # Enemy
 enemyImg = pygame.image.load('enemy1.png')
 enemy_width = 64
 enemy_height = 64
-enemyX = random.randint(0, width - enemy_width)  # Allow enemy to appear at random position
-enemyY = random.randint(0, 100)
+enemyX = 0
+enemyY = 0
 enemyX_change = 2
 enemyY_change = 25
 
@@ -42,12 +43,13 @@ enemyY_change = 25
 bulletImg = pygame.image.load('bullet.png')
 bullet_width = 32
 bullet_height = 32
-bulletX = 0
+bulletX = 368
 bulletY = 400
-bulletX_change = 0
-bulletY_change = 10
+bulletX_change = 0  # Not goona use
+bulletY_change = 5
 bullet_state = 'ready'
 
+score = 0
 
 def player(x, y):
     screen.blit(playerImg, (x, y))
@@ -56,6 +58,13 @@ def player(x, y):
 def enemy(x, y):
     screen.blit(enemyImg, (enemyX, enemyY))
 
+# Spawn an enemy at a random location
+def enemy_spawn():
+    global enemyX
+    global enemyY
+    enemyX = random.randint(0, width - enemy_width)
+    enemyY = random.randint(0, 100)
+
 
 def fire(x, y):
     global bullet_state
@@ -63,8 +72,16 @@ def fire(x, y):
     screen.blit(bulletImg, (x + 16, y))
 
 
+def is_collided(enemyX, enemyY, bulletX, bulletY):
+    distance = sqrt((enemyX - bulletX) ** 2 + (enemyY - bulletY) ** 2)
+    if distance < 27:
+        return True
+    return False
+
+
 # Game loop
 running = True
+enemy_spawn()
 while running:
     # Background color
     screen.fill((0, 0, 0))
@@ -90,7 +107,10 @@ while running:
                 playerX_change = player_rate
             # Fire Bullet
             if event.key == pygame.K_SPACE:
-                fire(playerX, playerY)
+                if bullet_state is 'ready':
+                    bulletX = playerX
+                    bulletY = playerY
+                    fire(bulletX, playerY)
         # Key release
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
@@ -124,9 +144,19 @@ while running:
         enemyY += enemyY_change
 
     # Moving Bullet
+    if bulletY <= 0:
+        bullet_state = 'ready'
     if bullet_state is 'fire':
-        fire(playerX, bulletY)
+        fire(bulletX, bulletY)
         bulletY -= bulletY_change
+
+    # Collision detection
+    collision = is_collided(enemyX, enemyY, bulletX, bulletY)
+    if collision:
+        bullet_state = 'ready'
+        score += 1
+        enemy_spawn()
+        print(score)
 
     # Drawing the player and enemy on the screen
     player(playerX, playerY)
