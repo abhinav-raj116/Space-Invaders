@@ -3,7 +3,7 @@ import random
 from math import sqrt
 from pygame import mixer
 
-# Intialize the pygame
+# Initialize the pygame
 pygame.init()
 
 # Create the Screen
@@ -113,17 +113,17 @@ def game_over(x, y):
     screen.blit(game_over_text, (x, y))
 
 
-def play_game():
-    pass
-
-
 def pause_game():
     global game_state
     game_state = 'pause'
+    pause_screen_text = welcome_text_font.render('Game Paused', True, (255, 255, 255))
+    screen.blit(bg, (0, 0))
+    screen.blit(replay_icon, (336, 284))
+    screen.blit(play_icon, (432, 284))
+    screen.blit(pause_screen_text, (200, 150))
+    pygame.display.update()
+
     while game_state is 'pause':
-        screen.blit(bg, (0, 0))
-        screen.blit(replay_icon, (336, 284))
-        screen.blit(play_icon, (432, 284))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -136,8 +136,6 @@ def pause_game():
                     restart_game()
                 if (432 <= pos[0] <= 464) and (284 <= pos[1] <= 316):
                     game_state = 'playing'
-
-        pygame.display.update()
 
 
 def restart_game():
@@ -156,11 +154,29 @@ def restart_game():
     player(playerX, playerY)
 
 
-# ************************************* GAME LOOP ***********************************************************
-running = True
+# ******************************************* WELCOME SCREEN **************************************************
+running = False
+
+welcome_text_font = pygame.font.Font('freesansbold.ttf', 64)
+welcome_text = welcome_text_font.render('SPACE INVADERS', True, (0, 0, 0))
+screen.blit(bg, (0, 0))
+screen.blit(play_icon, (384, 284))
+screen.blit(welcome_text, (100, 150))
+pygame.display.update()
+
+while not running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            quit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
+            # print(pos)
+            if (384 <= pos[0] <= 416) and (284 <= pos[1] <= 316):
+                running = True
+
+# ********************************************** GAME LOOP ****************************************************
+
 while running:
-    # Background color
-    screen.fill((0, 0, 0))
     # Background Image
     screen.blit(bg, (0, 0))
     # Pause Image
@@ -171,7 +187,7 @@ while running:
     # Checking for Key and Mouse Events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            quit()
 
         # **************** SpaceShip Movement Detection ****************
         # Key press
@@ -208,7 +224,7 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
             if (pos[0] >= 755) and (pos[1] <= 45):
-                print(f'Mouse clicked at : {pos}')
+                # print(f'Mouse clicked at : {pos}')
                 pause_game()
 
     # ******************************* Moving spaceship *******************************
