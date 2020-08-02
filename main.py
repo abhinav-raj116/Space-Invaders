@@ -9,26 +9,29 @@ pygame.init()
 # Create the Screen
 width = 800
 height = 600
-screen = pygame.display.set_mode((width, height))
+screen = pygame.display.set_mode((width, height), pygame.SRCCOLORKEY | pygame.SRCALPHA, 32)
 
-# Load background image
-bg = pygame.image.load('background.png')
+# Load background image, pause, play and replay images
+bg = pygame.image.load('images/background.png')
+play_icon = pygame.image.load('images/play.png')
+pause_icon = pygame.image.load('images/pause.png')
+replay_icon = pygame.image.load('images/restart.png')
 
 # Background Music
-mixer.music.load('background.wav')
+mixer.music.load('music/background.wav')
 mixer.music.play(-1)
 
 # Explosion and Bullet Sound
-explosion_sound = mixer.Sound('explosion.wav')
-bullet_sound = mixer.Sound('laser.wav')
+explosion_sound = mixer.Sound('music/explosion.wav')
+bullet_sound = mixer.Sound('music/laser.wav')
 
 # Title and Icon
 pygame.display.set_caption('Space Invaders')
-icon = pygame.image.load('icon.png')
+icon = pygame.image.load('images/icon.png')
 pygame.display.set_icon(icon)
 
 # Player (SpaceShip)
-playerImg = pygame.image.load('player.png')
+playerImg = pygame.image.load('images/player.png')
 playerX = 368
 playerY = 400
 player_width = 64
@@ -47,7 +50,7 @@ enemyY = []
 enemyX_change = []
 enemyY_change = []
 for i in range(num_of_enemies):
-    enemyImg.append(pygame.image.load('enemy1.png'))
+    enemyImg.append(pygame.image.load('images/enemy1.png'))
     enemyX.append(random.randint(0, width - enemy_width))
     enemyY.append(random.randint(0, 100))
     enemyX_change.append(3)
@@ -56,7 +59,7 @@ for i in range(num_of_enemies):
 # Bullet
 # 'ready' - bullet is not visible
 # 'fire' - bullet is visible and moving
-bulletImg = pygame.image.load('bullet.png')
+bulletImg = pygame.image.load('images/bullet.png')
 bullet_width = 32
 bullet_height = 32
 bulletX = 368
@@ -87,8 +90,8 @@ def player(x, y):
     screen.blit(playerImg, (x, y))
 
 
-def enemy(x, y, j):
-    screen.blit(enemyImg[j], (x, y))
+def enemy(x, y, i):
+    screen.blit(enemyImg[i], (x, y))
 
 
 def fire(x, y):
@@ -110,13 +113,62 @@ def game_over(x, y):
     screen.blit(game_over_text, (x, y))
 
 
-# Game loop
+def play_game():
+    pass
+
+
+def pause_game():
+    global game_state
+    game_state = 'pause'
+    while game_state is 'pause':
+        screen.blit(bg, (0, 0))
+        screen.blit(replay_icon, (336, 284))
+        screen.blit(play_icon, (432, 284))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+
+                if (336 <= pos[0] <= 368) and (284 <= pos[1] <= 316):
+                    game_state = 'playing'
+                    restart_game()
+                if (432 <= pos[0] <= 464) and (284 <= pos[1] <= 316):
+                    game_state = 'playing'
+
+        pygame.display.update()
+
+
+def restart_game():
+    global enemyX
+    global enemyY
+    global score
+    global playerX
+    global playerY
+    score = 0
+    playerX = 368
+    playerY = 400
+
+    for i in range(num_of_enemies):
+        enemyX[i] = (random.randint(0, width - enemy_width))
+        enemyY[i] = (random.randint(0, 100))
+    player(playerX, playerY)
+
+
+# ************************************* GAME LOOP ***********************************************************
 running = True
 while running:
     # Background color
     screen.fill((0, 0, 0))
     # Background Image
     screen.blit(bg, (0, 0))
+    # Pause Image
+    screen.blit(pause_icon, (758, 10))
+    # Change mouse cursor
+    pygame.mouse.set_cursor(*pygame.cursors.tri_left)
+
+    # Checking for Key and Mouse Events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -151,6 +203,13 @@ while running:
                 playerX_change = 0
             if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
                 playerY_change = 0
+
+        # Mouse Events
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
+            if (pos[0] >= 755) and (pos[1] <= 45):
+                print(f'Mouse clicked at : {pos}')
+                pause_game()
 
     # ******************************* Moving spaceship *******************************
     playerX += playerX_change
@@ -221,7 +280,6 @@ while running:
         for i in range(num_of_enemies):
             enemy(enemyX[i], enemyY[i], i)
         game_over(game_overX, game_overY)
-
 
     # Update screen
     pygame.display.update()
